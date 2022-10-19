@@ -12,24 +12,38 @@ class SavedDataViewController: UIViewController {
     var receivedTime : String?
     var receivedHumidity : String?
     
-    var vc = ViewController()
+    var vc = MainViewController()
     
     let currentTime = Date()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.dataSource = self
-        tableView.delegate = self
+        
+        // Regist cell
+        tableView.register(UINib(nibName: Constant.cellNibName, bundle: nil), forCellReuseIdentifier: Constant.reuseCell)
+//        tableView.register(UINib.init(nibName: Constant.cellNibName, bundle: nil), fo rCellReuseIdentifier: Constant.reuseCell)
 
+        self.tableView.reloadData()
+        
+        //Init data
     }
     
     @IBOutlet weak var tableView: UITableView!
     
+//    func loadData(){
+//        for i in vc.humidityData.count {
+//            print("Looped")
+//        }
+//    }
+    
     
 }
 
+//MARK: - Table View Data Source
 extension SavedDataViewController : UITableViewDataSource{
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        print("Saved.count is \(vc.humidityData.count)")
         return vc.humidityData.count
     }
     
@@ -46,6 +60,7 @@ extension SavedDataViewController : UITableViewDataSource{
         
 //        cell.humidity.text = data.value(forKey: "humidity") as? String
         cell.humidity.text = receivedHumidity!
+        cell.time.text = receivedTime!
         
         
         print(format.string(from: time))
@@ -55,8 +70,3 @@ extension SavedDataViewController : UITableViewDataSource{
     }
 }
 
-extension SavedDataViewController : UITableViewDelegate{
-     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print(indexPath.row)
-    }
-}

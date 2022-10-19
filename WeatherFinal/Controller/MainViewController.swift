@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  MainViewController.swift
 //  Weather
 //
 //  Created by minhdat on 11/10/2022.
@@ -9,7 +9,11 @@ import UIKit
 import CoreLocation
 import CoreData
 
-class ViewController: UIViewController {
+class MainViewController: UIViewController {
+    
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
+    var context : NSManagedObjectContext!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -26,7 +30,7 @@ class ViewController: UIViewController {
     var locationManager = CLLocationManager()
     
     var humidityData : [NSManagedObject] = []
-    var savedHumidity : String = "Not yet"
+    var savedHumidity : String = ""
     
     @IBOutlet weak var CityName: UILabel!
     @IBOutlet weak var SearchTextField: UITextField!
@@ -34,25 +38,73 @@ class ViewController: UIViewController {
     @IBOutlet weak var Humidity: UILabel!
     @IBOutlet weak var weatherImage: UIImageView!
     
-    @IBAction func SaveData(_ sender: Any) {
+    func openDB(){
+        context = appDelegate.persistentContainer.viewContext
+        let entity = NSEntityDescription.entity(forEntityName: "\(Constant.entityName)", in: context)
+        let newData = NSManagedObject(entity: entity!, insertInto: context)
+        saveData(UserDBObj:newData)
+    }
+    
+    
+    func saveData(UserDBObj: NSManagedObject){
+        UserDBObj.setValue(savedHumidity, forKey: "\(Constant.humidityFieldName)")
         
-        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
-        let managedContext = appDelegate.persistentContainer.viewContext
-        
-        let entity = NSEntityDescription.entity(forEntityName: "HumData", in: managedContext)!
-        let humData = NSManagedObject(entity: entity, insertInto: managedContext)
-        
-        humData.setValue(savedHumidity, forKey: "humidity")
+        print("Storing data...")
         
         do {
-            try managedContext.save()
-            humidityData.append(humData)
-            //                    tableview.reloadData()
-            print("Saved humidity = \(savedHumidity)")
-            print(humidityData.count)
-        } catch let error as NSError {
-            print("Could not save. \(error), \(error.userInfo)")
+            try context.save()
+        } catch {
+            print("Storing data Failed")
         }
+        fetchData()
+    }
+    
+    func fetchData(){
+        print("Fetching Data..")
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "\(Constant.entityName)")
+        request.returnsObjectsAsFaults = false
+        
+        do {
+            let result = try context.fetch(request)
+            for data in result as! [NSManagedObject] {
+                let savedHum = data.value(forKey: "\(Constant.humidityFieldName)") as! String
+                print("Saved humidity is "+savedHum+"%")
+            }
+        } catch {
+            print("Fetching data Failed")
+        }
+        
+        
+        
+        
+        
+        
+    }
+    
+    
+    
+    @IBAction func SaveData(_ sender: Any) {
+        
+        //        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+        //        let managedContext = appDelegate.persistentContainer.viewContext
+        //
+        //        let entity = NSEntityDescription.entity(forEntityName: "HumData", in: managedContext)!
+        //        let humData = NSManagedObject(entity: entity, insertInto: managedContext)
+        //
+        //        humData.setValue(savedHumidity, forKey: "humidity")
+        //
+        //        do {
+        //            try managedContext.save()
+        //            humidityData.append(humData)
+        //            //                    tableview.reloadData()
+        //            print("Saved humidity = \(savedHumidity)")
+        //            print("Main.count is \(humidityData.count)")
+        //        } catch let error as NSError {
+        //            print("Could not save. \(error), \(error.userInfo)")
+        //        }
+        
+        
+        openDB()
         self.performSegue(withIdentifier: "ReuseableCell", sender: "self")
     }
     
@@ -65,12 +117,13 @@ class ViewController: UIViewController {
         }
     }
     
+    
 }
 
 
 
 //MARK: - WeatherManagerDelegate
-extension ViewController : WeatherManagerDelegate{
+extension MainViewController : WeatherManagerDelegate{
     func didFailWithError(error: Error) {
         print(error)
     }
@@ -78,7 +131,7 @@ extension ViewController : WeatherManagerDelegate{
     func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel) {
         DispatchQueue.main.async {
             self.Temperature.text = weather.temperatureString
-//            self.Humidity.text = weather.humidityString
+            //            self.Humidity.text = weather.humidityString
             
             self.savedHumidity = weather.humidityString
             self.Humidity.text = self.savedHumidity
@@ -95,7 +148,7 @@ extension ViewController : WeatherManagerDelegate{
 
 
 //MARK: - UITextField Delegate
-extension ViewController : UITextFieldDelegate {
+extension MainViewController : UITextFieldDelegate {
     
     @IBAction func SearchLocation(_ sender: UIButton) {
         SearchTextField.endEditing(true)
@@ -125,7 +178,7 @@ extension ViewController : UITextFieldDelegate {
 }
 
 //MARK: - Core location
-extension ViewController : CLLocationManagerDelegate {
+extension MainViewController : CLLocationManagerDelegate {
     @IBAction func CurrentLocation(_ sender: UIButton) {
         locationManager.requestLocation()
     }
@@ -141,7 +194,19 @@ extension ViewController : CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print(error)
+        
+        //        if ((error as? LocalizedError) != nil){
+        //        if (error != nil){
+        //
+        //            let alert = UIAlertController(title: "Error" , message: "\(error)", preferredStyle: .alert)
+        //
+        //            alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+        //
+        //            self.present(alert, animated: true)
+        //        }
+        
+        print(error )
+        
     }
 }
 

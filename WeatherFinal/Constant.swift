@@ -7,5 +7,11 @@
 
 import Foundation
 struct Constant {
-   static let reuseCell : String = "ReuseableCell"
+    
+    // TableviewController
+    static let reuseCell : String = "ReuseableCell"
+    static let cellNibName : String = "DataCell"
+    static let entityName : String = "HumData"
+    static let humidityFieldName : String = "humidity"
 }
+
